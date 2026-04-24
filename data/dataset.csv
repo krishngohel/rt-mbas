@@ -1,0 +1,1 @@
+timestamp,session_id,eye_aspect_ratio,blink_indicator,mouth_open_ratio,head_tilt_angle,face_motion_delta,hand_velocity,hand_acceleration,gesture_activity_score,idle_time_ratio,rolling_mean_ear,rolling_std_ear,rolling_mean_hand_vel,rolling_std_hand_vel,motion_entropy,label

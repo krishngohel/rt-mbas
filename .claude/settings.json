@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip show *)",
+      "Bash(python -c \"import mediapipe; print\\(mediapipe.__version__\\)\")",
+      "Bash(pip install *)",
+      "PowerShell(pip install \"mediapipe==0.10.14\" 2>&1)",
+      "PowerShell(python -m pip install \"mediapipe==0.10.14\" 2>&1)",
+      "PowerShell(python -c \"import mediapipe; print\\(dir\\(mediapipe\\)\\)\" 2>&1)",
+      "PowerShell(python -c \"import pkgutil, mediapipe; [print\\(m.name\\) for m in pkgutil.walk_packages\\(mediapipe.__path__, mediapipe.__name__+'.'\\)]\" 2>&1)"
+    ]
+  }
+}
