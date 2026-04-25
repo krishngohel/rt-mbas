@@ -1,0 +1,3 @@
+timestamp,eye_aspect_ratio,blink_indicator,mouth_open_ratio,head_tilt_angle,face_motion_delta,hand_velocity,hand_acceleration,gesture_activity_score,idle_time_ratio,rolling_mean_ear,rolling_std_ear,rolling_mean_velocity,rolling_std_velocity,motion_entropy,label
+1777004491.3127122,0.0,1,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,Focused
+1777004491.3127122,0.0,1,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,0.0,0.0,Distracted

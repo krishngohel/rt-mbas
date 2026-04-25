@@ -11,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import numpy as np
+import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -27,6 +28,7 @@ from ml.preprocess import DataPreprocessor
 from app.config import DATA_PATH, MODEL_PATH, LABELS
 
 _ANALYSIS_DIR = Path(__file__).parent.parent / "analysis"
+_STOCK_PATH   = DATA_PATH.parent / "stock_dataset.csv"
 
 
 def _save_confusion_matrix(cm: np.ndarray, labels: list, output_path: Path) -> None:
@@ -47,20 +49,35 @@ def _save_confusion_matrix(cm: np.ndarray, labels: list, output_path: Path) -> N
     fig.tight_layout()
     fig.savefig(output_path, dpi=120)
     plt.close(fig)
-    print(f"Confusion matrix saved → {output_path}")
+    print(f"Confusion matrix saved -> {output_path}")
 
 
 def main() -> None:
     """Load data, validate, train, evaluate, and persist the model."""
-    if not DATA_PATH.exists():
+    prep = DataPreprocessor()
+    dfs  = []
+
+    if _STOCK_PATH.exists():
+        df_stock = prep.load(_STOCK_PATH)
+        dfs.append(df_stock)
+        print(f"Stock data : {len(df_stock):>6} rows  ({_STOCK_PATH.name})")
+    else:
+        print(f"No stock data found at {_STOCK_PATH} — run _gen_stock_data.py to create it.")
+
+    if DATA_PATH.exists() and DATA_PATH.stat().st_size > 0:
+        df_user = prep.load(DATA_PATH)
+        dfs.append(df_user)
+        print(f"User data  : {len(df_user):>6} rows  ({DATA_PATH.name})")
+
+    if not dfs:
         print(
-            f"No dataset found at {DATA_PATH}.\n"
-            "Run  python app/main.py  first to collect behavioural data."
+            "No data found. Run  python _gen_stock_data.py  for stock data,\n"
+            "or  python app/main.py  to collect live behavioural data."
         )
         sys.exit(1)
 
-    prep = DataPreprocessor()
-    df = prep.load(DATA_PATH)
+    df = pd.concat(dfs, ignore_index=True) if len(dfs) > 1 else dfs[0]
+    print(f"Total      : {len(df):>6} rows\n")
 
     # ── Minimum data checks ───────────────────────────────────────────────────
     if len(df) < 300:
@@ -73,12 +90,18 @@ def main() -> None:
 
     present = set(df["label"].unique())
     missing = set(LABELS) - present
-    if missing:
+    if len(present) < 2:
         print(
-            f"Missing labels: {missing}.\n"
-            "Collect data covering all three states: Focused, Distracted, Stressed."
+            f"Need at least 2 distinct labels to train — only found: {present}.\n"
+            "Run app/main.py across multiple emotional states first."
         )
         sys.exit(1)
+    if missing:
+        print(
+            f"Note: {len(missing)} label(s) not yet collected: {sorted(missing)}\n"
+            "The model will train on the labels present. Collect the missing states\n"
+            "and retrain for full coverage."
+        )
 
     # ── Feature engineering ───────────────────────────────────────────────────
     df = prep.engineer_features(df)
@@ -118,7 +141,7 @@ def main() -> None:
 
     MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, MODEL_PATH)
-    print(f"\nModel saved → {MODEL_PATH}")
+    print(f"\nModel saved -> {MODEL_PATH}")
     print("Run  python app/main.py        for live inference.")
     print("Run  streamlit run dashboard/app.py  for the analytics dashboard.")
 

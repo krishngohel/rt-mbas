@@ -5,6 +5,7 @@ Loads a trained RandomForest model and scaler, reconstructs lag features
 on-the-fly from a rolling history buffer, and returns smoothed predictions.
 """
 import numpy as np
+import pandas as pd
 import joblib
 from collections import deque, Counter
 
@@ -80,8 +81,8 @@ class InferenceEngine:
         cols = self._feature_names or [
             k for k in row if k not in ("timestamp", "label")
         ]
-        X = np.array([[row.get(c, 0.0) for c in cols]], dtype=np.float64)
-        X_scaled = self._scaler.transform(X)
+        X = pd.DataFrame([[row.get(c, 0.0) for c in cols]], columns=cols)
+        X_scaled = pd.DataFrame(self._scaler.transform(X), columns=cols)
 
         raw_pred = self._model.predict(X_scaled)[0]
         probs = self._model.predict_proba(X_scaled)[0]

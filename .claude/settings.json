@@ -7,7 +7,13 @@
       "PowerShell(pip install \"mediapipe==0.10.14\" 2>&1)",
       "PowerShell(python -m pip install \"mediapipe==0.10.14\" 2>&1)",
       "PowerShell(python -c \"import mediapipe; print\\(dir\\(mediapipe\\)\\)\" 2>&1)",
-      "PowerShell(python -c \"import pkgutil, mediapipe; [print\\(m.name\\) for m in pkgutil.walk_packages\\(mediapipe.__path__, mediapipe.__name__+'.'\\)]\" 2>&1)"
+      "PowerShell(python -c \"import pkgutil, mediapipe; [print\\(m.name\\) for m in pkgutil.walk_packages\\(mediapipe.__path__, mediapipe.__name__+'.'\\)]\" 2>&1)",
+      "PowerShell(cd C:\\\\Users\\\\awsom\\\\rt-mbas; $proc = Start-Process python -ArgumentList \"-m streamlit run dashboard/app.py --server.headless true --server.port 8502\" -PassThru -NoNewWindow; Start-Sleep -Seconds 8; if \\(-not $proc.HasExited\\) { $proc.Kill\\(\\); Write-Host \"Streamlit started OK \\(killed after 8s\\)\" } else { Write-Host \"Streamlit exited early with code $\\($proc.ExitCode\\)\" } 2>&1)",
+      "PowerShell(cd C:\\\\Users\\\\awsom\\\\rt-mbas; $proc = Start-Process python -ArgumentList \"app/main.py\" -PassThru -NoNewWindow; Start-Sleep -Seconds 12; if \\(-not $proc.HasExited\\) { $proc.Kill\\(\\); Write-Host \"app/main.py ran for 12s OK\" } else { Write-Host \"app/main.py exited early with code $\\($proc.ExitCode\\)\" })",
+      "Read(//c/Users/awsom/.claude/projects/c--Users-awsom-rt-mbas/memory//**)",
+      "Bash(python _check_v3.py)",
+      "Bash(python _gen_stock_data.py)",
+      "Bash(python -c ' *)"
     ]
   }
 }

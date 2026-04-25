@@ -1,0 +1,182 @@
+Landmark Stream → Sequence Buffer → Feature Encoding → Label Generation → Training Set → Model Training → Evaluation
+1) INPUT CONTRACT (FROM YOUR EXISTING CODE)
+
+Assume you already output per frame:
+
+{
+  "t": float,
+  "face": [468 x 3],
+  "left_hand": [21 x 3] | null,
+  "right_hand": [21 x 3] | null
+}
+Required preprocessing (before anything else):
+Normalize coordinates (face-centered or screen-normalized)
+Fill missing hands with:
+zeros
+mask flag (VERY important)
+2) SEQUENCE BUFFER (CRITICAL FIX)
+
+You should NOT train per-frame.
+
+Implement:
+Rolling buffer of 60 frames
+Update every 15–30 frames
+sequence = shape(60, raw_landmark_dim)
+3) FEATURE ENCODING (THIS IS THE MAIN UPGRADE)
+
+Raw landmarks → weak signal
+Engineered features → strong signal
+
+3.1 Face Encoding
+A. Static geometry (per frame)
+Mouth width
+Mouth openness
+Eye openness (L/R)
+Eyebrow height
+Head tilt (approx from key points)
+B. Temporal (per frame)
+velocity = current - previous
+acceleration = velocity - prev_velocity
+3.2 Hand Encoding (THIS IS WHERE YOU WIN)
+
+For each hand:
+
+A. Motion intensity
+hand_motion = sum(||joint_t - joint_t-1||)
+B. Finger states
+
+For each finger:
+
+Extended (1/0)
+Curled (distance tip → palm)
+C. Gesture embedding (lightweight)
+
+Derive:
+
+OPEN_HAND
+CLOSED_FIST
+POINTING
+PINCH
+UNKNOWN
+
+Rule-based is fine initially.
+
+D. Behavioral signals
+Movement variance (over 60 frames)
+Frequency (FFT or zero-crossings)
+Symmetry (left vs right)
+3.3 Interaction Features (UNDERRATED, HIGH VALUE)
+
+These dramatically improve behavior inference:
+
+Hand ↔ face distance
+Hand touching face (binary)
+Hands crossing midline
+Head movement vs hand movement correlation
+3.4 Final Feature Vector
+
+Per frame:
+
+F ≈ 300–1200 features
+
+Per sequence:
+
+X.shape = (60, F)
+4) LABEL GENERATION (YOUR CURRENT WEAK POINT)
+
+You likely don’t have strong labels—fix this.
+
+4.1 Multi-Head Labeling (recommended)
+
+Instead of one label, use:
+
+y = {
+  "emotion": one_hot(6–8 classes),
+  "engagement": scalar (0–1),
+  "nervousness": scalar (0–1),
+  "gesture_class": multi-label
+}
+4.2 Auto-labeling (scalable approach)
+Emotion (face-driven proxies)
+Smile → happy
+Eye widen → surprise
+Low movement → neutral/sad
+Behavior (hand-driven)
+High variance → nervous
+Repetitive motion → fidgeting
+Stillness → disengaged
+4.3 Bootstrap with pretrained tools
+
+Use:
+
+DeepFace
+OpenFace
+
+These give:
+
+Emotion probabilities
+Action Units
+
+Treat them as:
+
+soft labels (not ground truth)
+5) DATASET CONSTRUCTION
+
+Convert sequences into:
+
+X = (N, 60, F)
+y = (N, targets)
+Normalize:
+Per-feature standardization
+Clip outliers
+6) MODEL (FOCUSED ON TEMPORAL LEARNING)
+
+You don’t need anything exotic initially.
+
+Option A — Strong baseline
+2-layer LSTM → Dense → Multi-head outputs
+Option B — Better
+Temporal Transformer → Multi-head heads
+Output heads:
+Emotion (softmax)
+Engagement (regression)
+Nervousness (regression)
+Gesture class (multi-label sigmoid)
+7) TRAINING STRATEGY
+Loss:
+L = L_emotion + L_engagement + L_nervousness + L_gesture
+Key improvements:
+Class balancing
+Label smoothing (for noisy labels)
+Temporal dropout (drop random frames)
+8) EVALUATION (DON’T SKIP THIS)
+
+Measure separately:
+
+Emotion accuracy
+Gesture F1 score
+Behavior regression error
+
+Also check:
+
+Temporal consistency (predictions shouldn’t flicker)
+9) REAL-TIME DEPLOYMENT ADJUSTMENTS
+Use rolling predictions
+Apply EMA smoothing:
+pred = alpha * current + (1-alpha) * prev
+10) WHAT WILL ACTUALLY IMPROVE YOUR MODEL
+
+If you do only 3 things:
+
+1. Switch to sequence-based training
+2. Add hand-derived behavioral features
+3. Use multi-head outputs instead of single label
+
+You’ll see a massive jump in performance.
+
+Bottom line
+
+You don’t need new tracking.
+You need:
+
+Better features + better labels + temporal modeling
